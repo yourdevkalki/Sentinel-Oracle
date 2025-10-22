@@ -1,0 +1,23 @@
+{
+  "name": "sentinel-oracle-lit-vincent",
+  "version": "1.0.0",
+  "description": "Lit Protocol and Vincent integration for Sentinel Oracle",
+  "main": "lit_client.js",
+  "scripts": {
+    "test": "node test_lit.js"
+  },
+  "keywords": [
+    "lit-protocol",
+    "vincent",
+    "defi",
+    "automation"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@lit-protocol/lit-node-client": "^3.1.0",
+    "@lit-protocol/constants": "^3.1.0",
+    "@lit-protocol/auth-helpers": "^3.1.0",
+    "ethers": "^6.10.0",
+    "dotenv": "^16.3.1"
+  }
+}
