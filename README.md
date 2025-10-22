@@ -437,19 +437,6 @@ MIT License - see [LICENSE](LICENSE) file for details
 - **Lit Protocol** - For encryption and programmable signing
 - **Vincent** - For DeFi automation framework
 
----
-
-## 📞 Contact & Links
-
-- **GitHub:** [Repository Link]
-- **Demo Video:** [Video Link]
-- **Agentverse:** [Agent Link]
-- **Vincent App:** [Vincent Registry Link]
-- **Contract:** [Etherscan Link]
-
----
-
-## 🎯 Winning Angle
 
 Sentinel Oracle is unique because it:
 
