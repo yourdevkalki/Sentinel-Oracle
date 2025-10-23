@@ -3,6 +3,7 @@
 import { TrendingUp, TrendingDown, Activity } from "lucide-react";
 
 export default function PriceCard({
+  asset,
   price,
   zScore,
   isAnomalous,
@@ -40,7 +41,7 @@ export default function PriceCard({
       <div className="flex items-start justify-between mb-6">
         <div>
           <h2 className="text-slate-400 text-sm font-medium mb-2">
-            BTC/USD Price
+            {asset || "BTC/USD"} Price
           </h2>
           <div className="flex items-baseline space-x-3">
             <span className={`text-5xl font-bold ${getStatusColor()}`}>
@@ -55,7 +56,7 @@ export default function PriceCard({
         <div>
           <p className="text-slate-500 text-xs mb-1">Z-Score</p>
           <p className={`text-lg font-semibold ${getStatusColor()}`}>
-            {zScore ? zScore.toFixed(2) : "--"}
+            {zScore !== null && zScore !== undefined ? zScore.toFixed(2) : "--"}
           </p>
         </div>
         <div>

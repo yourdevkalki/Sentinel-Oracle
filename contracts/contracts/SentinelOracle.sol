@@ -32,6 +32,12 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     // User address => Deposit info
     mapping(address => UserDeposit) public userDeposits;
     
+    // Asset ID => Asset metadata
+    mapping(bytes32 => string) public assetSymbols;
+    
+    // Array of supported asset IDs
+    bytes32[] public supportedAssets;
+    
     // Vincent executor address (authorized to execute actions)
     address public vincentExecutor;
     
@@ -88,6 +94,11 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
         uint256 timestamp
     );
     
+    event AssetAdded(
+        bytes32 indexed assetId,
+        string symbol
+    );
+    
     // ============ Modifiers ============
     
     modifier onlyAIAgent() {
@@ -124,6 +135,46 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     function setVincentExecutor(address _executor) external onlyOwner {
         require(_executor != address(0), "Invalid executor address");
         vincentExecutor = _executor;
+    }
+    
+    /**
+     * @notice Add a new supported asset
+     * @param assetId Asset identifier (e.g., keccak256("BTC/USD"))
+     * @param symbol Asset symbol (e.g., "BTC/USD")
+     */
+    function addSupportedAsset(bytes32 assetId, string calldata symbol) external onlyOwner {
+        require(bytes(symbol).length > 0, "Symbol cannot be empty");
+        require(bytes(assetSymbols[assetId]).length == 0, "Asset already exists");
+        
+        assetSymbols[assetId] = symbol;
+        supportedAssets.push(assetId);
+        
+        emit AssetAdded(assetId, symbol);
+    }
+    
+    /**
+     * @notice Get all supported asset IDs
+     * @return Array of supported asset IDs
+     */
+    function getSupportedAssets() external view returns (bytes32[] memory) {
+        return supportedAssets;
+    }
+    
+    /**
+     * @notice Get asset symbol by ID
+     * @param assetId Asset identifier
+     * @return symbol Asset symbol
+     */
+    function getAssetSymbol(bytes32 assetId) external view returns (string memory) {
+        return assetSymbols[assetId];
+    }
+    
+    /**
+     * @notice Get count of supported assets
+     * @return count Number of supported assets
+     */
+    function getSupportedAssetCount() external view returns (uint256) {
+        return supportedAssets.length;
     }
     
     // ============ Price Update Functions ============

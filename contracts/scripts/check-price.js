@@ -1,7 +1,9 @@
 const hre = require("hardhat");
 
 async function main() {
-  const contractAddr = "0x516f96811D3C93E8a391109198514152E3918238";
+  const contractAddr =
+    process.env.SENTINEL_ORACLE_ADDRESS ||
+    "0x7f165fD307aeC2A00F89D0a533dF64CD4a7BB7Fd";
   const contract = await hre.ethers.getContractAt(
     "SentinelOracle",
     contractAddr
