@@ -60,22 +60,59 @@ export default function StatsPanel({ assets }) {
     },
   ];
 
+  const getAnomalyGlow = (label, value) => {
+    if (label === "Anomalies Detected") {
+      return value === 0 ? "success-glow" : "danger-pulse";
+    }
+    return "";
+  };
+
+  const getZScoreColor = (value) => {
+    const score = parseFloat(value);
+    if (score > 2) return "text-red-400";
+    if (score > 1.5) return "text-yellow-400";
+    return "text-accent-green";
+  };
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
       {statCards.map((stat, idx) => (
         <div
           key={idx}
-          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 hover:border-slate-600 transition-colors"
+          className={`glassmorphism rounded-xl p-6 glow-border-hover transition-all duration-300 hover:scale-105 ${getAnomalyGlow(
+            stat.label,
+            stat.value
+          )}`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-slate-400 text-xs font-medium">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[#F0F0F0]/60 text-xs font-semibold uppercase tracking-wide">
               {stat.label}
             </span>
-            <div className={`${stat.bgColor} p-1.5 rounded-lg`}>
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
+            <div
+              className={`${stat.bgColor} p-2 rounded-lg transition-transform hover:rotate-12`}
+            >
+              <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </div>
           </div>
-          <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+          <p
+            className={`text-3xl font-bold font-display ${
+              stat.label === "Avg Z-Score"
+                ? getZScoreColor(stat.value)
+                : stat.color
+            }`}
+          >
+            {stat.value}
+          </p>
+          {stat.label === "Anomalies Detected" && stat.value === 0 && (
+            <p className="text-xs text-accent-green/80 mt-2 font-semibold">
+              ✓ All Clear
+            </p>
+          )}
+          {stat.label === "Anomalies Detected" && stat.value > 0 && (
+            <p className="text-xs text-red-400/80 mt-2 font-semibold animate-pulse">
+              ⚠️ Attention Required
+            </p>
+          )}
         </div>
       ))}
     </div>
