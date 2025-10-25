@@ -25,7 +25,7 @@ CORS(app)  # Enable CORS for frontend
 
 # Global state (in production, use Redis or similar)
 # Multi-asset state tracking
-supported_assets = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "MATIC/USD"]
+supported_assets = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "LINK/USD"]
 
 agent_state = {
     "status": "initializing",

@@ -35,7 +35,7 @@ CONTRACT_ABI = [
 ]
 
 # Supported assets
-ASSETS = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "MATIC/USD"]
+ASSETS = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "LINK/USD"]
 
 def get_contract():
     """Get contract instance"""

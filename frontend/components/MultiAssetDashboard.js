@@ -19,7 +19,7 @@ const ASSET_MAPPING = {
   "ETH/USD": { name: "Ethereum", symbol: "ETH" },
   "SOL/USD": { name: "Solana", symbol: "SOL" },
   "AVAX/USD": { name: "Avalanche", symbol: "AVAX" },
-  "MATIC/USD": { name: "Polygon", symbol: "MATIC" },
+  "LINK/USD": { name: "Chainlink", symbol: "LINK" },
 };
 
 export default function MultiAssetDashboard({ agentStatus }) {

@@ -9,7 +9,7 @@ async function main() {
     contractAddr
   );
 
-  const assets = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "MATIC/USD"];
+  const assets = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "LINK/USD"];
 
   console.log("\n📊 Checking all asset prices on Sepolia network...");
   console.log("Contract:", contractAddr);

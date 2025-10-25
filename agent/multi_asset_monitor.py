@@ -27,7 +27,7 @@ logging.basicConfig(
 logger = logging.getLogger("MultiAssetMonitor")
 
 # Supported assets
-SUPPORTED_ASSETS = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "MATIC/USD"]
+SUPPORTED_ASSETS = ["BTC/USD", "ETH/USD", "SOL/USD", "AVAX/USD", "LINK/USD"]
 
 class MultiAssetAnomalyDetector:
     """Multi-asset anomaly detector using z-score method"""

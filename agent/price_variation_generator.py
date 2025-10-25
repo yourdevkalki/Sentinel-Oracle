@@ -18,7 +18,7 @@ BASE_PRICES = {
     "ETH/USD": 3850,
     "SOL/USD": 100,
     "AVAX/USD": 25,
-    "MATIC/USD": 0.8
+    "LINK/USD": 18
 }
 
 def generate_varying_price(base_price, variation_percent=2):
