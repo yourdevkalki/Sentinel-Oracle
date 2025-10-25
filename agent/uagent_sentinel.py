@@ -152,43 +152,73 @@ async def handle_anomaly_query(ctx: Context, sender: str, msg: AnomalyQuery):
         )
 
 def generate_metta_explanation(chat_data: dict) -> str:
-    """Generate MeTTa reasoning explanation"""
+    """Generate MeTTa reasoning explanation with knowledge graph structure"""
     is_anomalous = chat_data.get("is_anomalous", False)
+    z_score = chat_data.get("last_z_score", 0)
+    price = chat_data.get("last_price", 0)
     
     if is_anomalous:
-        return """
-; MeTTa Reasoning: Anomaly Detected
-(define-public anomaly-status true)
-(define-public z-score-threshold 2.5)
+        return f"""
+; MeTTa Knowledge Graph: Anomaly Detection
+; Based on ASI Alliance MeTTa reasoning framework
 
-(if (> (abs current-z-score) z-score-threshold)
-    (anomaly-detected
-        (reason "price-deviation-exceeds-threshold")
-        (severity (if (> (abs current-z-score) 3.0) 
-                      "CRITICAL" 
-                      "HIGH"))
-        (action "TRIGGER_PROTECTIVE_MEASURES"))
-    (normal-operation))
+(: anomaly-fact (-> Asset Price ZScore AnomalyStatus))
+(anomaly-fact BTC/USD {price:.2f} {z_score:.3f} DETECTED)
 
-; Recommended Actions:
-; - Monitor position closely
-; - Consider stop-loss activation
-; - Alert risk management systems
+(: z-score-rule (-> Float Bool))
+(= (z-score-rule $z) 
+   (if (> (abs $z) 2.5) True False))
+
+(: severity-calculation (-> Float Severity))
+(= (severity-calculation $z)
+   (if (> (abs $z) 3.0) CRITICAL
+   (if (> (abs $z) 2.5) HIGH
+   MODERATE)))
+
+(: risk-assessment (-> AnomalyStatus Action))
+(= (risk-assessment DETECTED)
+   (case-expression
+      ((> price-volatility 0.08) TRIGGER_STOP_LOSS)
+      ((> price-volatility 0.05) ALERT_USER)
+      (True MONITOR_CLOSELY)))
+
+; Knowledge Graph Facts:
+(assert (price-deviation exceeds-threshold))
+(assert (market-risk elevated))
+(assert (protective-action recommended))
+
+; Recommended Actions (derived from knowledge graph):
+; 1. Enable stop-loss triggers
+; 2. Notify risk management systems
+; 3. Increase monitoring frequency
+; 4. Validate against multiple oracle sources
 """
     else:
-        return """
-; MeTTa Reasoning: Normal Operation
-(define-public anomaly-status false)
-(define-public z-score-threshold 2.5)
+        return f"""
+; MeTTa Knowledge Graph: Normal Operation
+; Based on ASI Alliance MeTTa reasoning framework
 
-(if (<= (abs current-z-score) z-score-threshold)
-    (normal-operation
-        (market-status "STABLE")
-        (risk-level "LOW")
-        (action "CONTINUE_MONITORING"))
-    (anomaly-detected))
+(: market-state (-> Asset Price ZScore Status))
+(market-state BTC/USD {price:.2f} {z_score:.3f} NORMAL)
+
+(: stability-rule (-> Float Bool))
+(= (stability-rule $z)
+   (if (<= (abs $z) 2.5) True False))
+
+(: risk-level (-> Status RiskLevel))
+(= (risk-level NORMAL) LOW)
+
+(: monitoring-strategy (-> RiskLevel Action))
+(= (monitoring-strategy LOW) CONTINUE_MONITORING)
+
+; Knowledge Graph Facts:
+(assert (market-conditions stable))
+(assert (price-variance within-bounds))
+(assert (risk-level minimal))
+(assert (protective-measures not-required))
 
 ; System Status: All nominal
+; No action required - continue passive monitoring
 """
 
 @sentinel.on_interval(period=30.0)
