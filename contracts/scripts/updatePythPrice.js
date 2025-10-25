@@ -25,7 +25,8 @@ const ASSETS = {
   },
   SOL: {
     id: hre.ethers.id("SOL/USD"),
-    pythId: "0xef0d8b6fba2ceba31da1bfe3071b2c116c4c4a630d3cb253d87a602c373051b", // SOL/USD price feed
+    pythId:
+      "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d", // SOL/USD price feed (CORRECT)
     symbol: "SOL/USD",
     basePrice: 100,
   },
@@ -127,10 +128,17 @@ class PricePusher {
    */
   async updatePrice(assetId, priceData) {
     try {
+      // Get current gas price and add buffer for faster confirmation
+      const feeData = await hre.ethers.provider.getFeeData();
+      const gasPrice = feeData.gasPrice
+        ? (feeData.gasPrice * 120n) / 100n
+        : undefined; // 20% buffer
+
       const tx = await this.contract.updatePrice(
         assetId,
         priceData.price,
-        priceData.confidence
+        priceData.confidence,
+        { gasPrice }
       );
 
       console.log("📤 Transaction sent:", tx.hash);
@@ -284,8 +292,16 @@ async function main() {
     process.exit(0);
   });
 
-  // Start pushing prices (default to BTC, or "all" for multi-asset)
-  const asset = process.argv[2] || "BTC";
+  // Start pushing prices (default to "all" for multi-asset)
+  // Check for asset argument in various positions (hardhat vs direct node execution)
+  const assetArg =
+    process.env.ASSET_MODE ||
+    process.argv[2] ||
+    process.argv[process.argv.length - 1];
+  const asset =
+    assetArg && assetArg !== __filename && !assetArg.includes("hardhat")
+      ? assetArg
+      : "all";
 
   if (asset.toLowerCase() === "all") {
     await pusher.startAll();
