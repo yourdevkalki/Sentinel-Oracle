@@ -193,9 +193,8 @@ npm run dev
 
 ---
 
-## 🎯 Prize Track Alignment
 
-### 🔵 Pyth Network ($5,000)
+### 🔵 Pyth Network 
 
 **Most innovative use of Pyth Pull Oracle**
 
@@ -213,7 +212,7 @@ npm run dev
 
 ---
 
-### 🟣 Lit Protocol / Vincent ($5,000)
+### 🟣 Lit Protocol / Vincent
 
 **DeFi automation with Vincent App**
 
@@ -230,7 +229,7 @@ npm run dev
 
 ---
 
-### 🟢 ASI Alliance ($10,000)
+### 🟢 ASI Alliance 
 
 **uAgent + MeTTa + ASI:One**
 
