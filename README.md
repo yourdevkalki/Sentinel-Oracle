@@ -10,7 +10,7 @@
 
 ## 🔗 Quick Links
 
-- **🤖 Live Agent:** [SentinelAI on Agentverse](https://agentverse.ai/agents/sentinelai-oracle)
+- **🤖 Live Agent:** [SentinelAI on Agentverse](https://agentverse.ai/agents/details/agent1qfvrl0utl3s5qlqnztefva2cnma6wmmsvyu3tw0mf878ry8d2neq65vnqrn/profile)
 - **📜 Smart Contract:** [0x4c299a...dbFB0 on Sepolia](https://sepolia.etherscan.io/address/0x4c299a5c75Fd195e3418Daea67116Fd742adbFB0)
 - **🎥 Demo Video:** [demo](https://drive.google.com/file/d/1yfY8TQ4lms8BiTr158aTEnGLaeQ6KTt5/view)
 - **📊 Dashboard:** [https://sentinel-oracle.vercel.app/](https://sentinel-oracle.vercel.app/)
