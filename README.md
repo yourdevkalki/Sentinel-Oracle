@@ -12,8 +12,8 @@
 
 - **🤖 Live Agent:** [SentinelAI on Agentverse](https://agentverse.ai/agents/sentinelai-oracle)
 - **📜 Smart Contract:** [0x4c299a...dbFB0 on Sepolia](https://sepolia.etherscan.io/address/0x4c299a5c75Fd195e3418Daea67116Fd742adbFB0)
-- **🎥 Demo Video:** _(Recording in progress)_
-- **📊 Dashboard:** Multi-asset monitoring with 5 cryptocurrencies
+- **🎥 Demo Video:** [demo](https://drive.google.com/file/d/1yfY8TQ4lms8BiTr158aTEnGLaeQ6KTt5/view)
+- **📊 Dashboard:** [https://sentinel-oracle.vercel.app/](https://sentinel-oracle.vercel.app/)
 - **💬 Chat with AI:** Try ASI:One protocol on Agentverse
 
 ---
