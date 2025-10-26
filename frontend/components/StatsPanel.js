@@ -2,69 +2,117 @@
 
 import { Activity, TrendingUp, Clock, Shield } from "lucide-react";
 
-export default function StatsPanel({ agentStatus }) {
-  const calculateUptime = () => {
-    if (!agentStatus?.uptime_start) return "N/A";
-    const start = new Date(agentStatus.uptime_start);
-    const now = new Date();
-    const diff = Math.floor((now - start) / 1000 / 60); // minutes
+export default function StatsPanel({ assets }) {
+  const calculateStats = () => {
+    if (!assets || assets.length === 0) {
+      return {
+        totalAssets: 0,
+        anomalousAssets: 0,
+        avgZScore: 0,
+        lastUpdate: "Never",
+      };
+    }
 
-    if (diff < 60) return `${diff}m`;
-    const hours = Math.floor(diff / 60);
-    return `${hours}h ${diff % 60}m`;
+    const anomalousAssets = assets.filter((asset) => asset.isAnomalous).length;
+    const avgZScore =
+      assets.reduce((sum, asset) => sum + Math.abs(asset.zScore), 0) /
+      assets.length;
+    const lastUpdate = Math.max(...assets.map((asset) => asset.lastUpdate));
+
+    return {
+      totalAssets: assets.length,
+      anomalousAssets,
+      avgZScore: avgZScore.toFixed(2),
+      lastUpdate: new Date(lastUpdate).toLocaleTimeString(),
+    };
   };
 
-  const stats = [
+  const stats = calculateStats();
+
+  const statCards = [
     {
-      label: "Agent Status",
-      value: agentStatus?.status || "Unknown",
+      label: "Total Assets",
+      value: stats.totalAssets,
       icon: Activity,
-      color:
-        agentStatus?.status === "running" ? "text-green-400" : "text-gray-400",
-      bgColor:
-        agentStatus?.status === "running"
-          ? "bg-green-500/20"
-          : "bg-gray-500/20",
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/20",
     },
     {
       label: "Anomalies Detected",
-      value: agentStatus?.anomaly_count || 0,
+      value: stats.anomalousAssets,
       icon: TrendingUp,
       color: "text-red-400",
       bgColor: "bg-red-500/20",
     },
     {
-      label: "Uptime",
-      value: calculateUptime(),
+      label: "Avg Z-Score",
+      value: stats.avgZScore,
       icon: Clock,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/20",
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-500/20",
     },
     {
-      label: "Samples Collected",
-      value: agentStatus?.history_size || 0,
+      label: "Last Update",
+      value: stats.lastUpdate,
       icon: Shield,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/20",
+      color: "text-green-400",
+      bgColor: "bg-green-500/20",
     },
   ];
 
+  const getAnomalyGlow = (label, value) => {
+    if (label === "Anomalies Detected") {
+      return value === 0 ? "success-glow" : "danger-pulse";
+    }
+    return "";
+  };
+
+  const getZScoreColor = (value) => {
+    const score = parseFloat(value);
+    if (score > 2) return "text-red-400";
+    if (score > 1.5) return "text-yellow-400";
+    return "text-accent-green";
+  };
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      {stats.map((stat, idx) => (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {statCards.map((stat, idx) => (
         <div
           key={idx}
-          className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 hover:border-slate-600 transition-colors"
+          className={`glassmorphism rounded-xl p-6 glow-border-hover transition-all duration-300 hover:scale-105 ${getAnomalyGlow(
+            stat.label,
+            stat.value
+          )}`}
         >
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-slate-400 text-xs font-medium">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[#F0F0F0]/60 text-xs font-semibold uppercase tracking-wide">
               {stat.label}
             </span>
-            <div className={`${stat.bgColor} p-1.5 rounded-lg`}>
-              <stat.icon className={`w-4 h-4 ${stat.color}`} />
+            <div
+              className={`${stat.bgColor} p-2 rounded-lg transition-transform hover:rotate-12`}
+            >
+              <stat.icon className={`w-5 h-5 ${stat.color}`} />
             </div>
           </div>
-          <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+          <p
+            className={`text-3xl font-bold font-display ${
+              stat.label === "Avg Z-Score"
+                ? getZScoreColor(stat.value)
+                : stat.color
+            }`}
+          >
+            {stat.value}
+          </p>
+          {stat.label === "Anomalies Detected" && stat.value === 0 && (
+            <p className="text-xs text-accent-green/80 mt-2 font-semibold">
+              ✓ All Clear
+            </p>
+          )}
+          {stat.label === "Anomalies Detected" && stat.value > 0 && (
+            <p className="text-xs text-red-400/80 mt-2 font-semibold animate-pulse">
+              ⚠️ Attention Required
+            </p>
+          )}
         </div>
       ))}
     </div>

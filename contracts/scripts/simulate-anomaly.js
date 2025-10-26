@@ -92,12 +92,14 @@ async function main() {
 
   // Phase 3: Wait for AI agent detection
   console.log("⏳ Phase 3: Waiting for AI agent to detect anomaly...");
-  console.log(
-    "   (If agent is running, it should flag this within 5-10 seconds)\n"
-  );
+  console.log("   (Agent checks every 5 seconds - waiting 15 seconds)\n");
+
+  // Give agent time to detect (it checks every 5 seconds)
+  await new Promise((resolve) => setTimeout(resolve, 8000));
 
   // Check if anomaly was flagged
-  for (let i = 0; i < 12; i++) {
+  let flagged = false;
+  for (let i = 0; i < 15; i++) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const priceData = await contract.getLatestPrice(assetId);
@@ -106,18 +108,28 @@ async function main() {
     if (isAnomalous) {
       console.log("✅ ANOMALY DETECTED BY AI AGENT!");
       console.log("   Agent has successfully flagged the price anomaly.\n");
+      flagged = true;
       break;
     }
 
-    if (i === 11) {
-      console.log("⚠️  Anomaly not yet flagged by agent.");
-      console.log(
-        "   Make sure the AI agent is running: cd agent && python agent.py\n"
-      );
-    } else {
-      process.stdout.write(`   Checking... (${i + 1}/12)\r`);
-    }
+    process.stdout.write(
+      `   Checking... (${i + 1}/15) - Current flag: ${isAnomalous}\r`
+    );
   }
+
+  if (!flagged) {
+    console.log("\n⚠️  Anomaly not yet flagged by agent.");
+    console.log("   This can happen if:");
+    console.log("   1. Agent is building price history (needs 10+ samples)");
+    console.log("   2. Agent just started and hasn't reached the anomaly yet");
+    console.log("   3. The price already recovered before agent checked");
+    console.log("   Check agent logs: tail -f agent/agent.log\n");
+  }
+
+  // DON'T return to normal immediately - give agent time to detect
+  console.log("\n⏸️  Keeping anomalous price for agent detection...");
+  console.log("   Waiting 15 more seconds...\n");
+  await new Promise((resolve) => setTimeout(resolve, 15000));
 
   // Phase 4: Return to normal
   console.log("📉 Phase 4: Returning prices to normal range...\n");

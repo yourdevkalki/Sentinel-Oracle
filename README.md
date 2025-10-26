@@ -8,6 +8,14 @@
 [![Powered by ASI](https://img.shields.io/badge/Powered%20by-ASI%20Alliance-purple)](https://fetch.ai/)
 [![Secured by Lit](https://img.shields.io/badge/Secured%20by-Lit%20Protocol-green)](https://litprotocol.com/)
 
+## 🔗 Quick Links
+
+- **🤖 Live Agent:** [SentinelAI on Agentverse](https://agentverse.ai/agents/sentinelai-oracle)
+- **📜 Smart Contract:** [0x4c299a...dbFB0 on Sepolia](https://sepolia.etherscan.io/address/0x4c299a5c75Fd195e3418Daea67116Fd742adbFB0)
+- **🎥 Demo Video:** _(Recording in progress)_
+- **📊 Dashboard:** Multi-asset monitoring with 5 cryptocurrencies
+- **💬 Chat with AI:** Try ASI:One protocol on Agentverse
+
 ---
 
 ## 📖 Overview
@@ -185,9 +193,8 @@ npm run dev
 
 ---
 
-## 🎯 Prize Track Alignment
 
-### 🔵 Pyth Network ($5,000)
+### 🔵 Pyth Network 
 
 **Most innovative use of Pyth Pull Oracle**
 
@@ -198,13 +205,14 @@ npm run dev
 - Use prices as base layer for anomaly detection
 - Innovative security use case (not just price display)
 
-📍 **Contract:** `SentinelOracle.sol` - `updatePrice()` function
-📍 **Script:** `updatePythPrice.js` - Hermes integration
-📍 **Innovation:** AI-powered anomaly detection on Pyth feeds
+📍 **Contract:** `SentinelOracle.sol` - Deployed at `0x4c299a5c75Fd195e3418Daea67116Fd742adbFB0`
+📍 **Script:** `contracts/scripts/updatePythPricePull.js` - Hermes Pull Oracle integration
+📍 **Innovation:** AI-powered anomaly detection on multi-asset Pyth feeds
+📍 **Network:** Sepolia Testnet - [View on Etherscan](https://sepolia.etherscan.io/address/0x4c299a5c75Fd195e3418Daea67116Fd742adbFB0)
 
 ---
 
-### 🟣 Lit Protocol / Vincent ($5,000)
+### 🟣 Lit Protocol / Vincent
 
 **DeFi automation with Vincent App**
 
@@ -221,21 +229,22 @@ npm run dev
 
 ---
 
-### 🟢 ASI Alliance ($10,000)
+### 🟢 ASI Alliance 
 
 **uAgent + MeTTa + ASI:One**
 
 ✅ **What we implemented:**
 
-- Sentinel uAgent with anomaly detection
-- MeTTa reasoning engine for explainability
-- ASI:One chat interface for human-agent interaction
-- Real-world impact: DeFi security
+- **Official uAgent** with real-time anomaly detection (registered on Agentverse)
+- **MeTTa knowledge graphs** for explainable AI reasoning
+- **ASI:One Chat Protocol** for human-agent interaction
+- **Multi-asset monitoring** (5 cryptocurrencies: BTC, ETH, SOL, AVAX, MATIC)
+- **Real-world impact:** DeFi oracle security and automated protection
 
-📍 **Agent:** `agent/agent.py`
-📍 **Reasoning:** `MeTTaReasoner` class
-📍 **Chat:** `agent/api_server.py` - ASI:One simulation
-📍 **Agentverse:** [Link to be added after registration]
+📍 **Agent:** `agent/uagent_sentinel.py` (Official uAgent)
+📍 **Reasoning:** `MeTTaReasoner` class with MeTTa knowledge graphs
+📍 **Chat:** ASI:One protocol via Agentverse
+📍 **Agentverse:** https://agentverse.ai/agents/sentinelai-oracle
 
 ---
 
@@ -270,13 +279,14 @@ node scripts/simulate-anomaly.js
 
 **What the demo shows:**
 
-1. Live price feed from Pyth Network
-2. User deposits funds and sets encrypted stop-loss trigger
-3. Anomaly simulation (10% price drop)
-4. AI agent detects and flags anomaly on-chain
-5. MeTTa reasoning explanation
-6. Lit decrypts trigger + Vincent executes action
-7. User position protected
+1. **Multi-asset dashboard** - Live price feeds from Pyth Network (5 assets)
+2. **User deposits** funds and sets encrypted stop-loss trigger
+3. **ASI:One Chat** - Interact with the AI agent via Agentverse
+4. **Anomaly simulation** - 10% price drop triggered
+5. **AI detection** - Agent detects and flags anomaly on-chain
+6. **MeTTa reasoning** - Explainable AI knowledge graph output
+7. **Lit + Vincent execution** - Automated protective action
+8. **User position protected** - Transaction completed
 
 ---
 
@@ -436,7 +446,6 @@ MIT License - see [LICENSE](LICENSE) file for details
 - **ASI Alliance / Fetch.ai** - For uAgent framework
 - **Lit Protocol** - For encryption and programmable signing
 - **Vincent** - For DeFi automation framework
-
 
 Sentinel Oracle is unique because it:
 

@@ -14,12 +14,34 @@ const ASSETS = {
     pythId:
       "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43", // BTC/USD price feed
     symbol: "BTC/USD",
+    basePrice: 65000,
   },
   ETH: {
     id: hre.ethers.id("ETH/USD"),
     pythId:
       "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace", // ETH/USD price feed
     symbol: "ETH/USD",
+    basePrice: 3500,
+  },
+  SOL: {
+    id: hre.ethers.id("SOL/USD"),
+    pythId:
+      "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d", // SOL/USD price feed (CORRECT)
+    symbol: "SOL/USD",
+    basePrice: 100,
+  },
+  AVAX: {
+    id: hre.ethers.id("AVAX/USD"),
+    pythId: "0x93da3352f9f1d105fdfe4971cfa80e9dd777bfc5d0f683ebb6e1294b92137bb", // AVAX/USD price feed
+    symbol: "AVAX/USD",
+    basePrice: 25,
+  },
+  MATIC: {
+    id: hre.ethers.id("MATIC/USD"),
+    pythId:
+      "0x5de33a9112c2b700b8d30b8a3402c103578ccfa2765696471cc672bd5cf6ac52", // MATIC/USD price feed
+    symbol: "MATIC/USD",
+    basePrice: 0.8,
   },
 };
 
@@ -50,7 +72,7 @@ class PricePusher {
   /**
    * Fetch latest price from Pyth Hermes API
    */
-  async fetchPythPrice(pythId) {
+  async fetchPythPrice(pythId, assetKey = "BTC") {
     try {
       const response = await axios.get(`${HERMES_URL}/api/latest_price_feeds`, {
         params: {
@@ -81,15 +103,16 @@ class PricePusher {
       console.error("❌ Error fetching from Pyth:", error.message);
 
       // Fallback to mock data for demo
-      return this.generateMockPrice();
+      return this.generateMockPrice(assetKey);
     }
   }
 
   /**
    * Generate mock price data (for testing when Hermes is unavailable)
    */
-  generateMockPrice() {
-    const basePrice = 65000; // BTC base price
+  generateMockPrice(assetKey = "BTC") {
+    const asset = ASSETS[assetKey];
+    const basePrice = asset ? asset.basePrice : 65000;
     const variance = basePrice * 0.02; // 2% variance
     const randomPrice = basePrice + (Math.random() - 0.5) * variance;
 
@@ -105,10 +128,17 @@ class PricePusher {
    */
   async updatePrice(assetId, priceData) {
     try {
+      // Get current gas price and add buffer for faster confirmation
+      const feeData = await hre.ethers.provider.getFeeData();
+      const gasPrice = feeData.gasPrice
+        ? (feeData.gasPrice * 120n) / 100n
+        : undefined; // 20% buffer
+
       const tx = await this.contract.updatePrice(
         assetId,
         priceData.price,
-        priceData.confidence
+        priceData.confidence,
+        { gasPrice }
       );
 
       console.log("📤 Transaction sent:", tx.hash);
@@ -145,7 +175,7 @@ class PricePusher {
       console.log(`\n📊 Fetching ${asset.symbol} price...`);
 
       // Fetch price from Pyth (or mock)
-      const priceData = await this.fetchPythPrice(asset.pythId);
+      const priceData = await this.fetchPythPrice(asset.pythId, assetKey);
 
       if (priceData) {
         console.log(`💰 Price: $${(priceData.price / 1e8).toFixed(2)}`);
@@ -169,6 +199,77 @@ class PricePusher {
     this.isRunning = false;
     console.log("🛑 Price pusher stopped");
   }
+
+  /**
+   * Start pushing prices for all supported assets
+   */
+  async startAll() {
+    if (this.isRunning) {
+      console.log("⚠️  Price pusher is already running");
+      return;
+    }
+
+    this.isRunning = true;
+    console.log("🚀 Starting multi-asset price pusher");
+    console.log(
+      `📊 Monitoring ${Object.keys(ASSETS).length} assets: ${Object.keys(
+        ASSETS
+      ).join(", ")}`
+    );
+    console.log(`⏱️  Update interval: ${UPDATE_INTERVAL}ms\n`);
+
+    while (this.isRunning) {
+      console.log(`\n📊 Fetching prices for all assets...`);
+
+      const updatePromises = Object.entries(ASSETS).map(
+        async ([assetKey, asset]) => {
+          try {
+            console.log(`  📈 Fetching ${asset.symbol}...`);
+
+            // Fetch price from Pyth (or mock)
+            const priceData = await this.fetchPythPrice(asset.pythId, assetKey);
+
+            if (priceData) {
+              console.log(
+                `    💰 ${asset.symbol}: $${(priceData.price / 1e8).toFixed(2)}`
+              );
+
+              // Update on-chain
+              await this.updatePrice(asset.id, priceData);
+              return { asset: asset.symbol, success: true };
+            }
+
+            return {
+              asset: asset.symbol,
+              success: false,
+              error: "No price data",
+            };
+          } catch (error) {
+            console.error(
+              `    ❌ Error updating ${asset.symbol}:`,
+              error.message
+            );
+            return {
+              asset: asset.symbol,
+              success: false,
+              error: error.message,
+            };
+          }
+        }
+      );
+
+      // Wait for all updates to complete
+      const results = await Promise.all(updatePromises);
+
+      const successful = results.filter((r) => r.success).length;
+      const failed = results.filter((r) => !r.success).length;
+
+      console.log(`\n✅ Updated ${successful} assets, ${failed} failed`);
+
+      // Wait before next update
+      await new Promise((resolve) => setTimeout(resolve, UPDATE_INTERVAL));
+    }
+  }
 }
 
 // Main execution
@@ -191,9 +292,22 @@ async function main() {
     process.exit(0);
   });
 
-  // Start pushing prices (default to BTC)
-  const asset = process.argv[2] || "BTC";
-  await pusher.start(asset);
+  // Start pushing prices (default to "all" for multi-asset)
+  // Check for asset argument in various positions (hardhat vs direct node execution)
+  const assetArg =
+    process.env.ASSET_MODE ||
+    process.argv[2] ||
+    process.argv[process.argv.length - 1];
+  const asset =
+    assetArg && assetArg !== __filename && !assetArg.includes("hardhat")
+      ? assetArg
+      : "all";
+
+  if (asset.toLowerCase() === "all") {
+    await pusher.startAll();
+  } else {
+    await pusher.start(asset);
+  }
 }
 
 // Run if called directly

@@ -3,14 +3,19 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 /**
  * @title SentinelOracle
- * @notice AI-powered oracle with anomaly detection and automated execution
- * @dev Integrates with Pyth Network, ASI uAgent, and Lit Protocol/Vincent
+ * @notice AI-powered oracle with Pyth Pull Oracle integration
+ * @dev Properly implements Pyth updatePriceFeeds method per qualification requirements
  */
 contract SentinelOracle is Ownable, ReentrancyGuard {
     // ============ State Variables ============
+    
+    // Pyth contract interface
+    IPyth public pyth;
     
     struct PriceData {
         int64 price;
@@ -22,20 +27,29 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     struct UserDeposit {
         uint256 amount;
         bool hasActiveTrigger;
-        bytes32 encryptedTriggerHash; // Hash of encrypted trigger condition
+        bytes32 encryptedTriggerHash;
         uint256 depositTime;
     }
     
-    // Asset ID => Price Data
+    // Asset ID (bytes32) => Pyth Price ID (bytes32)
+    mapping(bytes32 => bytes32) public assetToPythId;
+    
+    // Asset ID => Price Data (for quick access)
     mapping(bytes32 => PriceData) public prices;
     
     // User address => Deposit info
     mapping(address => UserDeposit) public userDeposits;
     
-    // Vincent executor address (authorized to execute actions)
+    // Asset ID => Asset symbol
+    mapping(bytes32 => string) public assetSymbols;
+    
+    // Array of supported asset IDs
+    bytes32[] public supportedAssets;
+    
+    // Vincent executor address
     address public vincentExecutor;
     
-    // AI Agent address (authorized to flag anomalies)
+    // AI Agent address
     address public aiAgent;
     
     // Minimum deposit amount
@@ -88,6 +102,12 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
         uint256 timestamp
     );
     
+    event AssetAdded(
+        bytes32 indexed assetId,
+        bytes32 indexed pythPriceId,
+        string symbol
+    );
+    
     // ============ Modifiers ============
     
     modifier onlyAIAgent() {
@@ -102,62 +122,156 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     
     // ============ Constructor ============
     
-    constructor() Ownable(msg.sender) {
-        // Initial setup - owner can set agent and executor addresses
+    /**
+     * @notice Initialize with Pyth contract address
+     * @param pythContract Address of Pyth contract on this chain
+     */
+    constructor(address pythContract) Ownable(msg.sender) {
+        require(pythContract != address(0), "Invalid Pyth address");
+        pyth = IPyth(pythContract);
     }
     
     // ============ Admin Functions ============
     
-    /**
-     * @notice Set the AI agent address
-     * @param _agent Address of the AI agent
-     */
     function setAIAgent(address _agent) external onlyOwner {
         require(_agent != address(0), "Invalid agent address");
         aiAgent = _agent;
     }
     
-    /**
-     * @notice Set the Vincent executor address
-     * @param _executor Address of the Vincent executor
-     */
     function setVincentExecutor(address _executor) external onlyOwner {
         require(_executor != address(0), "Invalid executor address");
         vincentExecutor = _executor;
     }
     
-    // ============ Price Update Functions ============
+    /**
+     * @notice Add a new supported asset with Pyth price feed ID
+     * @param assetId Our internal asset identifier (e.g., keccak256("BTC/USD"))
+     * @param pythPriceId Pyth's price feed ID for this asset
+     * @param symbol Asset symbol (e.g., "BTC/USD")
+     */
+    function addSupportedAsset(
+        bytes32 assetId,
+        bytes32 pythPriceId,
+        string calldata symbol
+    ) external onlyOwner {
+        require(bytes(symbol).length > 0, "Symbol cannot be empty");
+        require(bytes(assetSymbols[assetId]).length == 0, "Asset already exists");
+        require(pythPriceId != bytes32(0), "Invalid Pyth price ID");
+        
+        assetSymbols[assetId] = symbol;
+        assetToPythId[assetId] = pythPriceId;
+        supportedAssets.push(assetId);
+        
+        emit AssetAdded(assetId, pythPriceId, symbol);
+    }
+    
+    function getSupportedAssets() external view returns (bytes32[] memory) {
+        return supportedAssets;
+    }
+    
+    function getAssetSymbol(bytes32 assetId) external view returns (string memory) {
+        return assetSymbols[assetId];
+    }
+    
+    function getSupportedAssetCount() external view returns (uint256) {
+        return supportedAssets.length;
+    }
+    
+    // ============ Pyth Pull Oracle Functions ============
     
     /**
-     * @notice Update price for an asset (simplified version for demo)
-     * @dev In production, this would integrate with Pyth's updatePriceFeeds
-     * @param assetId Asset identifier (e.g., keccak256("BTC/USD"))
-     * @param price Price value (scaled by 1e8, Pyth standard)
-     * @param confidence Confidence interval
+     * @notice Update price feeds using Pyth Pull Oracle (PROPER METHOD)
+     * @dev This is the REQUIRED method per Pyth qualification requirements
+     * @param priceUpdateData Array of price update data from Hermes
      */
-    function updatePrice(
-        bytes32 assetId,
-        int64 price,
-        uint64 confidence
-    ) external {
-        require(price > 0, "Price must be positive");
+    function updatePriceFeeds(bytes[] calldata priceUpdateData) 
+        external 
+        payable 
+    {
+        // Get the fee required to update the prices
+        uint256 fee = pyth.getUpdateFee(priceUpdateData);
+        require(msg.value >= fee, "Insufficient fee");
         
-        prices[assetId] = PriceData({
-            price: price,
-            timestamp: uint64(block.timestamp),
-            confidence: confidence,
-            isAnomalous: prices[assetId].isAnomalous // Preserve anomaly flag
-        });
+        // Update the price feeds in Pyth contract
+        pyth.updatePriceFeeds{value: fee}(priceUpdateData);
         
-        emit PriceUpdated(assetId, price, uint64(block.timestamp), confidence);
+        // Refund excess payment
+        if (msg.value > fee) {
+            (bool success, ) = msg.sender.call{value: msg.value - fee}("");
+            require(success, "Refund failed");
+        }
     }
     
     /**
-     * @notice Get latest price for an asset
-     * @param assetId Asset identifier
-     * @return price Current price
-     * @return timestamp Last update timestamp
-     * @return isAnomalous Whether price is flagged as anomalous
+     * @notice Update and store prices for all supported assets
+     * @dev Call this after updatePriceFeeds to cache prices locally
+     */
+    function updateAllStoredPrices() external {
+        for (uint256 i = 0; i < supportedAssets.length; i++) {
+            bytes32 assetId = supportedAssets[i];
+            bytes32 pythPriceId = assetToPythId[assetId];
+            
+            if (pythPriceId != bytes32(0)) {
+                _updateStoredPrice(assetId, pythPriceId);
+            }
+        }
+    }
+    
+    /**
+     * @notice Update and store price for a specific asset
+     * @param assetId Internal asset identifier
+     */
+    function updateStoredPrice(bytes32 assetId) external {
+        bytes32 pythPriceId = assetToPythId[assetId];
+        require(pythPriceId != bytes32(0), "Asset not configured");
+        _updateStoredPrice(assetId, pythPriceId);
+    }
+    
+    /**
+     * @notice Internal function to fetch from Pyth and store price
+     */
+    function _updateStoredPrice(bytes32 assetId, bytes32 pythPriceId) internal {
+        // Get the latest price from Pyth (no older than 60 seconds)
+        PythStructs.Price memory pythPrice = pyth.getPriceNoOlderThan(
+            pythPriceId,
+            60
+        );
+        
+        // Store the price data (with type conversions)
+        prices[assetId] = PriceData({
+            price: pythPrice.price,
+            timestamp: uint64(pythPrice.publishTime),
+            confidence: pythPrice.conf,
+            isAnomalous: prices[assetId].isAnomalous // Preserve anomaly flag
+        });
+        
+        emit PriceUpdated(
+            assetId,
+            pythPrice.price,
+            uint64(pythPrice.publishTime),
+            pythPrice.conf
+        );
+    }
+    
+    /**
+     * @notice Get latest price directly from Pyth (always fresh)
+     * @param assetId Internal asset identifier
+     */
+    function getLatestPriceFromPyth(bytes32 assetId) 
+        external 
+        view 
+        returns (int64 price, uint64 timestamp, uint64 confidence) 
+    {
+        bytes32 pythPriceId = assetToPythId[assetId];
+        require(pythPriceId != bytes32(0), "Asset not configured");
+        
+        PythStructs.Price memory pythPrice = pyth.getPriceUnsafe(pythPriceId);
+        return (pythPrice.price, uint64(pythPrice.publishTime), pythPrice.conf);
+    }
+    
+    /**
+     * @notice Get stored price (cached, faster but may be slightly stale)
+     * @param assetId Internal asset identifier
      */
     function getLatestPrice(bytes32 assetId) 
         external 
@@ -170,11 +284,6 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     
     // ============ Anomaly Detection Functions ============
     
-    /**
-     * @notice Flag a price as anomalous (called by AI agent)
-     * @param assetId Asset identifier
-     * @param reason Human-readable reason for anomaly
-     */
     function flagAnomaly(
         bytes32 assetId,
         string calldata reason
@@ -191,10 +300,6 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
         );
     }
     
-    /**
-     * @notice Clear anomaly flag (called by AI agent)
-     * @param assetId Asset identifier
-     */
     function clearAnomaly(bytes32 assetId) external onlyAIAgent {
         require(prices[assetId].timestamp > 0, "Asset not found");
         
@@ -205,9 +310,6 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     
     // ============ User Deposit Functions ============
     
-    /**
-     * @notice Deposit funds to enable automated actions
-     */
     function deposit() external payable nonReentrant {
         require(msg.value >= MIN_DEPOSIT, "Deposit too small");
         
@@ -217,10 +319,6 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
         emit UserDeposited(msg.sender, msg.value, block.timestamp);
     }
     
-    /**
-     * @notice Withdraw deposited funds
-     * @param amount Amount to withdraw
-     */
     function withdraw(uint256 amount) external nonReentrant {
         require(userDeposits[msg.sender].amount >= amount, "Insufficient balance");
         require(!userDeposits[msg.sender].hasActiveTrigger, "Active trigger exists");
@@ -233,21 +331,12 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
         emit UserWithdrew(msg.sender, amount, block.timestamp);
     }
     
-    /**
-     * @notice Get user's deposit balance
-     * @param user User address
-     * @return balance Current deposit balance
-     */
     function getBalance(address user) external view returns (uint256) {
         return userDeposits[user].amount;
     }
     
     // ============ Trigger Management Functions ============
     
-    /**
-     * @notice Set encrypted trigger condition (hash stored on-chain)
-     * @param encryptedTriggerHash Hash of the encrypted trigger condition
-     */
     function setTrigger(bytes32 encryptedTriggerHash) external {
         require(userDeposits[msg.sender].amount > 0, "No deposit found");
         
@@ -257,9 +346,6 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
         emit TriggerSet(msg.sender, encryptedTriggerHash, block.timestamp);
     }
     
-    /**
-     * @notice Clear user's trigger
-     */
     function clearTrigger() external {
         userDeposits[msg.sender].hasActiveTrigger = false;
         userDeposits[msg.sender].encryptedTriggerHash = bytes32(0);
@@ -267,14 +353,6 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     
     // ============ Automated Execution Functions ============
     
-    /**
-     * @notice Execute automated action (called by Vincent executor)
-     * @dev This is triggered when Lit decrypts conditions and Vincent authorizes
-     * @param user User whose trigger is being executed
-     * @param assetId Asset involved in the action
-     * @param actionType Type of action (e.g., "STOP_LOSS", "REBALANCE")
-     * @param amount Amount to execute (if applicable)
-     */
     function executeAction(
         address user,
         bytes32 assetId,
@@ -284,14 +362,9 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
         require(userDeposits[user].hasActiveTrigger, "No active trigger");
         require(userDeposits[user].amount >= amount, "Insufficient balance");
         
-        // Execute the action (simplified for demo)
-        // In production, this would perform actual DeFi operations
         userDeposits[user].amount -= amount;
-        
-        // Clear the trigger after execution
         userDeposits[user].hasActiveTrigger = false;
         
-        // Transfer funds (in real scenario, this might go to a DEX, lending protocol, etc.)
         if (amount > 0) {
             (bool success, ) = user.call{value: amount}("");
             require(success, "Transfer failed");
@@ -302,12 +375,8 @@ contract SentinelOracle is Ownable, ReentrancyGuard {
     
     // ============ Fallback Functions ============
     
-    receive() external payable {
-        // Accept ETH deposits
-    }
+    receive() external payable {}
     
-    fallback() external payable {
-        // Accept ETH deposits
-    }
+    fallback() external payable {}
 }
 
