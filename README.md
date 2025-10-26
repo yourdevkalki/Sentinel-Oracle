@@ -14,7 +14,8 @@
 - **📜 Smart Contract:** [0x4c299a...dbFB0 on Sepolia](https://sepolia.etherscan.io/address/0x4c299a5c75Fd195e3418Daea67116Fd742adbFB0)
 - **🎥 Demo Video:** [demo](https://drive.google.com/file/d/1yfY8TQ4lms8BiTr158aTEnGLaeQ6KTt5/view)
 - **📊 Dashboard:** [https://sentinel-oracle.vercel.app/](https://sentinel-oracle.vercel.app/)
-- **💬 Chat with AI:** Try ASI:One protocol on Agentverse
+- **Vincent Published ability:** [package](https://www.npmjs.com/package/sentinel-oracle-vincent-ability)
+- ** Vincent Published App ID ** `8497142216`
 
 ---
 
