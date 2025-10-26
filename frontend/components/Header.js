@@ -87,7 +87,7 @@ export default function Header({ walletConnected, setWalletConnected }) {
                 Dashboard
               </Link>
               <a
-                href="https://github.com/YOUR_USERNAME/sentinel-oracle"
+                href="https://github.com/yourdevkalki/Sentinel-Oracle"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-medium leading-normal hover:text-primary transition-colors"
@@ -151,7 +151,7 @@ export default function Header({ walletConnected, setWalletConnected }) {
                 Dashboard
               </Link>
               <a
-                href="https://github.com/YOUR_USERNAME/sentinel-oracle"
+                href="https://github.com/yourdevkalki/Sentinel-Oracle"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-sm font-medium leading-normal hover:text-primary transition-colors"

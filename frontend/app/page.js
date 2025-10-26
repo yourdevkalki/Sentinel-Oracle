@@ -20,7 +20,7 @@ export default function Home() {
             <div className="container mx-auto relative z-10">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div className="flex flex-col gap-8 text-center lg:text-left relative">
-                  <div className="flex flex-col gap-4 relative z-10"> 
+                  <div className="flex flex-col gap-4 relative z-10">
                     <h1 className="text-white text-4xl sm:text-5xl lg:text-6xl font-black font-display leading-tight tracking-[-0.033em]">
                       The Intelligent Oracle Layer{" "}
                       <span className="text-transparent bg-clip-text bg-primary">
@@ -43,7 +43,7 @@ export default function Home() {
                       </button>
                     </Link>
                     <a
-                      href="https://github.com/YOUR_USERNAME/sentinel-oracle"
+                      href="https://github.com/yourdevkalki/Sentinel-Oracle"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -220,13 +220,13 @@ export default function Home() {
               See Your Guardian in Action
             </h2>
             <div className="mt-8 p-4 sm:p-6 rounded-xl glassmorphism border-primary/20 border">
-              <div className="w-full h-[400px] rounded-lg bg-gradient-to-br from-primary/5 via-accent-violet/5 to-accent-green/5 flex items-center justify-center">
-                <Link href="/dashboard">
-                  <button className="flex items-center gap-3 px-8 py-4 bg-primary text-[#0A0A0A] rounded-xl font-bold text-lg hover:bg-opacity-90 transition-all duration-300 shadow-[0_0_15px_rgba(0,225,255,0.4)] hover:shadow-[0_0_25px_rgba(0,225,255,0.6)]">
-                    <span className="material-symbols-outlined">dashboard</span>
-                    View Live Dashboard
-                  </button>
-                </Link>
+              <div className="w-full aspect-video rounded-lg overflow-hidden bg-gradient-to-br from-primary/5 via-accent-violet/5 to-accent-green/5">
+                <iframe
+                  src="https://drive.google.com/file/d/1yfY8TQ4lms8BiTr158aTEnGLaeQ6KTt5/preview"
+                  allow="autoplay; encrypted-media"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                />
               </div>
             </div>
           </section>

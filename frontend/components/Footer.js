@@ -26,7 +26,7 @@ export default function Footer() {
         </Link>
         <div className="flex items-center gap-6 text-sm">
           <a
-            href="https://github.com/YOUR_USERNAME/sentinel-oracle"
+            href="https://github.com/yourdevkalki/Sentinel-Oracle"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#F0F0F0]/80 hover:text-primary transition-colors"
@@ -34,7 +34,7 @@ export default function Footer() {
             GitHub
           </a>
           <a
-            href="https://twitter.com"
+            href="https://x.com/yourdevkalki"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[#F0F0F0]/80 hover:text-primary transition-colors"
